@@ -16,12 +16,10 @@ defmodule AdventOfCode.Day03 do
     |> String.split("\n", trim: true)
     |> map(fn c -> String.split(c, " ", trim: true) |> map(&String.to_integer/1) end)
     |> chunk_every(3)
-    |> map(fn [[a, b, c], [d, e, f], [g, h, i]] -> [[a, d, g], [b, e, h], [c, f, i]] end)
-    |> map(fn l -> map(l, &check_triangle/1) end)
-    |> List.flatten()
-    |> frequencies()
-    |> Map.get(true)
-
-    #   |> map(fn t1, t2, t3 -> )
+    |> map(fn [[a, b, c], [d, e, f], [g, h, i]] ->
+      [check_triangle([a, d, g]), check_triangle([b, e, h]), check_triangle([c, f, i])]
+      |> count(fn c -> c end)
+    end)
+    |> sum()
   end
 end
