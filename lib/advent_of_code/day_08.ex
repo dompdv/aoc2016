@@ -23,11 +23,8 @@ defmodule AdventOfCode.Day08 do
   def parse(args), do: args |> String.split("\n", trim: true) |> map(&parse_line/1)
 
   def exec(grid, {:rect, cols, rows}) do
-    reduce(
-      for(c <- 0..(cols - 1), r <- 0..(rows - 1), do: {r, c}),
-      grid,
-      fn cell, g -> Map.update(g, cell, true, fn _ -> true end) end
-    )
+    for(c <- 0..(cols - 1), r <- 0..(rows - 1), into: %{}, do: {{r, c}, true})
+    |> Map.merge(grid)
   end
 
   def exec(grid, {:rotate_c, x, by}) do
