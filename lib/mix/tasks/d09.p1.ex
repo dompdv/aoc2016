@@ -5,7 +5,13 @@ defmodule Mix.Tasks.D09.P1 do
 
   @shortdoc "Day 09 Part 1"
   def run(args) do
-    input = nil
+    input = "A(1x5)BC"
+    input = "(3x3)XYZ"
+    input = "ADVENT"
+    input = "A(2x2)BCD(2x2)EFG"
+    input = "(6x1)(1x3)A"
+    input = "X(8x2)(3x3)ABCY"
+    input = AdventOfCode.Input.get!(9, 2016)
 
     if Enum.member?(args, "-b"),
       do: Benchee.run(%{part_1: fn -> input |> part1() end}),
