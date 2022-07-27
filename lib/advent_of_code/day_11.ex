@@ -1,9 +1,26 @@
 defmodule AdventOfCode.Day11 do
   import Enum
 
-  @start1 [{1, :h, :m}, {1, :l, :m}, {2, :h, :g}, {3, :l, :g}]
+  @start0 [{1, :h, :m}, {1, :l, :m}, {2, :h, :g}, {3, :l, :g}]
 
-  @start [
+  @start1 [
+    {1, :th, :g},
+    {1, :th, :m},
+    {1, :pl, :g},
+    {1, :st, :g},
+    {2, :pl, :m},
+    {2, :st, :m},
+    {3, :pr, :g},
+    {3, :pr, :m},
+    {3, :ru, :g},
+    {3, :ru, :m}
+  ]
+
+  @start2 [
+    {1, :el, :g},
+    {1, :el, :m},
+    {1, :di, :g},
+    {1, :di, :m},
     {1, :th, :g},
     {1, :th, :m},
     {1, :pl, :g},
@@ -94,13 +111,10 @@ defmodule AdventOfCode.Day11 do
 
   def add_to_visited(visited, %{elevator: e, storage: storage}) do
     :gb_sets.add_element({e, for({f, l} <- storage, do: {f, compress(l)})}, visited)
-    # :gb_sets.add_element(wh, visited)
   end
 
   def is_visited(visited, %{elevator: e, storage: storage}),
     do: :gb_sets.is_element({e, for({f, l} <- storage, do: {f, compress(l)})}, visited)
-
-  # do: :gb_sets.is_element(wh, visited)
 
   def find_solution(q, visited) do
     if :queue.is_empty(q) do
@@ -109,8 +123,7 @@ defmodule AdventOfCode.Day11 do
       {level, wh} = :queue.head(q)
       q = :queue.tail(q)
 
-      if :rand.uniform() > 0.9, do: IO.inspect({level, :queue.len(q), :gb_sets.size(visited)})
-
+      #      if :rand.uniform() > 0.9, do: IO.inspect({level, :queue.len(q), :gb_sets.size(visited)})
       if final?(wh) do
         {level, wh}
       else
@@ -136,31 +149,21 @@ defmodule AdventOfCode.Day11 do
     end
   end
 
-  def part1(_args) do
-    # ascenceur bouge de 1 à la fois
-    # il contient 1 ou 2 éléments
-    # on peut avoir autant de G que l'on veut par étage
-    # 4 étages, il faut tout ramener au 4eme
-    # on peut avoir autant d'éléments que l'on veut par étage
-    # on ne peut pas avoir de M (microchip) sans son G correspondant dans un étage où il y a d'autres G
-    # on peut avoir autant de M que l'on veut tant qu'on ne brise pas la règle précédente
+  def exec(args) do
     wh =
       reduce(
-        @start,
+        args,
         init_warehouse(),
         fn {floor, material, component}, wh -> add(wh, floor, {material, component}) end
       )
 
-    # move(wh, 2, [{:h, :m}, {:l, :m}]) |> move(1, [{:h, :m}, {:l, :m}])
-
-    # find_solutions(wh, 0, [wh], 7, :gb_sets.from_list([wh]))
     q = :queue.new()
-    q = :queue.cons({0, wh}, q)
-    # |> add_to_visited(wh)
-    visited = :gb_sets.new()
-    find_solution(q, visited)
+
+    find_solution(:queue.cons({0, wh}, q), :gb_sets.new())
+    |> elem(0)
   end
 
-  def part2(_args) do
-  end
+  def part1(_args), do: exec(@start1)
+
+  def part2(_args), do: exec(@start2)
 end
