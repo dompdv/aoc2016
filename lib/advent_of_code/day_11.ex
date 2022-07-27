@@ -84,40 +84,41 @@ defmodule AdventOfCode.Day11 do
     -(for(i <- 1..4, do: i * MapSet.size(storage[i])) |> sum())
   end
 
-  def find_solutions(_wh, moves, _path, min_moves, _) when moves >= min_moves, do: false
+  def add_to_visited(visited, %{elevator: e, storage: storage}) do
+    :gb_sets.add_element({e, for({f, l} <- storage, do: {f, MapSet.size(l)})}, visited)
+  end
 
-  def find_solutions(wh, moves, _path, min_moves, known) do
-    #    if moves == 12, do: IO.inspect({moves, wh})
-    # IO.inspect({moves, wh, min_moves}, label: "Current")
+  def is_visited(visited, %{elevator: e, storage: storage}),
+    do: :gb_sets.is_element({e, for({f, l} <- storage, do: {f, MapSet.size(l)})}, visited)
 
-    if final?(wh) do
-      IO.inspect({moves, wh, min_moves}, label: "Final")
-      moves
+  def find_solution(q, visited) do
+    if :queue.is_empty(q) do
+      :not_found
     else
-      pm = possible_moves(wh)
-      # |> IO.inspect(label: "PMoves")
+      {level, wh} = :queue.head(q)
+      if :rand.uniform() > 0.9, do: IO.inspect({level, :queue.len(q), :gb_sets.size(visited)})
+      q = :queue.tail(q)
 
-      if count(pm) == 0 do
-        false
+      if final?(wh) do
+        {level, wh}
       else
+        visited = visited |> add_to_visited(wh)
+
+        pm = possible_moves(wh)
+
         new_whs =
           for(
             {to, objects} <- pm,
             do: move(wh, to, objects)
           )
-          |> filter(fn w -> not :gb_sets.is_element(w, known) end)
+          |> filter(fn w -> not is_visited(visited, w) end)
 
-        # new_whs = sort_by(new_whs, &rank_function/1)
+        q =
+          reduce(new_whs, q, fn a_wh, local_q ->
+            :queue.snoc(local_q, {level + 1, a_wh})
+          end)
 
-        reduce(new_whs, {min_moves, known}, fn new_wh, {mm, new_known} ->
-          new_known = :gb_sets.add_element(new_wh, new_known)
-          # [new_wh | path]
-          case find_solutions(new_wh, moves + 1, nil, mm, new_known) do
-            false -> {mm, new_known}
-            n -> {if(n < mm, do: n, else: mm), new_known}
-          end
-        end)
-        |> elem(0)
+        find_solution(q, visited)
       end
     end
   end
@@ -139,7 +140,11 @@ defmodule AdventOfCode.Day11 do
 
     # move(wh, 2, [{:h, :m}, {:l, :m}]) |> move(1, [{:h, :m}, {:l, :m}])
 
-    find_solutions(wh, 0, [wh], 7, :gb_sets.from_list([wh]))
+    # find_solutions(wh, 0, [wh], 7, :gb_sets.from_list([wh]))
+    q = :queue.new()
+    q = :queue.cons({0, wh}, q)
+    visited = :gb_sets.new() |> add_to_visited(wh)
+    find_solution(q, visited)
   end
 
   def part2(_args) do
