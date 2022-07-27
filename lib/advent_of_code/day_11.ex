@@ -16,6 +16,7 @@ defmodule AdventOfCode.Day11 do
     {3, :ru, :m}
   ]
 
+  @spec init_warehouse :: %{elevator: 1, storage: map}
   def init_warehouse(),
     do: %{elevator: 1, storage: for(i <- 1..4, into: %{}, do: {i, MapSet.new()})}
 
@@ -84,41 +85,53 @@ defmodule AdventOfCode.Day11 do
     -(for(i <- 1..4, do: i * MapSet.size(storage[i])) |> sum())
   end
 
+  def compress(a_floor) do
+    reduce(a_floor, {0, 0}, fn
+      {_, :m}, {m, g} -> {m + 1, g}
+      {_, :g}, {m, g} -> {m, g + 1}
+    end)
+  end
+
   def add_to_visited(visited, %{elevator: e, storage: storage}) do
-    :gb_sets.add_element({e, for({f, l} <- storage, do: {f, MapSet.size(l)})}, visited)
+    :gb_sets.add_element({e, for({f, l} <- storage, do: {f, compress(l)})}, visited)
+    # :gb_sets.add_element(wh, visited)
   end
 
   def is_visited(visited, %{elevator: e, storage: storage}),
-    do: :gb_sets.is_element({e, for({f, l} <- storage, do: {f, MapSet.size(l)})}, visited)
+    do: :gb_sets.is_element({e, for({f, l} <- storage, do: {f, compress(l)})}, visited)
+
+  # do: :gb_sets.is_element(wh, visited)
 
   def find_solution(q, visited) do
     if :queue.is_empty(q) do
       :not_found
     else
       {level, wh} = :queue.head(q)
-      if :rand.uniform() > 0.9, do: IO.inspect({level, :queue.len(q), :gb_sets.size(visited)})
       q = :queue.tail(q)
+
+      if :rand.uniform() > 0.9, do: IO.inspect({level, :queue.len(q), :gb_sets.size(visited)})
 
       if final?(wh) do
         {level, wh}
       else
-        visited = visited |> add_to_visited(wh)
+        if is_visited(visited, wh) do
+          find_solution(q, visited)
+        else
+          visited = visited |> add_to_visited(wh)
 
-        pm = possible_moves(wh)
+          new_whs =
+            for(
+              {to, objects} <- possible_moves(wh),
+              do: move(wh, to, objects)
+            )
 
-        new_whs =
-          for(
-            {to, objects} <- pm,
-            do: move(wh, to, objects)
-          )
-          |> filter(fn w -> not is_visited(visited, w) end)
+          q =
+            reduce(new_whs, q, fn a_wh, local_q ->
+              :queue.snoc(local_q, {level + 1, a_wh})
+            end)
 
-        q =
-          reduce(new_whs, q, fn a_wh, local_q ->
-            :queue.snoc(local_q, {level + 1, a_wh})
-          end)
-
-        find_solution(q, visited)
+          find_solution(q, visited)
+        end
       end
     end
   end
@@ -143,7 +156,8 @@ defmodule AdventOfCode.Day11 do
     # find_solutions(wh, 0, [wh], 7, :gb_sets.from_list([wh]))
     q = :queue.new()
     q = :queue.cons({0, wh}, q)
-    visited = :gb_sets.new() |> add_to_visited(wh)
+    # |> add_to_visited(wh)
+    visited = :gb_sets.new()
     find_solution(q, visited)
   end
 
