@@ -68,14 +68,9 @@ defmodule AdventOfCode.Day12 do
     end
   end
 
-  def part1(args) do
-    parse(args) |> init_state() |> run()
-  end
-
   def set(%{registers: registers} = state, r, v),
     do: %{state | registers: Map.put(registers, r, v)}
 
-  def part2(args) do
-    parse(args) |> init_state() |> set(:c, 1) |> run()
-  end
+  def part1(args), do: parse(args) |> init_state() |> run()
+  def part2(args), do: parse(args) |> init_state() |> set(:c, 1) |> run()
 end
