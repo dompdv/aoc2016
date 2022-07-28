@@ -15,7 +15,7 @@ defmodule AdventOfCode.Day14 do
     case Regex.run(~r/(.)\1\1/, hash) do
       [_, m] ->
         if find_match(q, m) do
-          IO.inspect(counter - 1001)
+          # IO.inspect(counter - 1001)
           accumulate(:queue.snoc(q, next(salt, counter)), counter + 1, [m | digits], salt)
         else
           accumulate(:queue.snoc(q, next(salt, counter)), counter + 1, digits, salt)
