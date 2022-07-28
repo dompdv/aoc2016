@@ -27,17 +27,13 @@ defmodule AdventOfCode.Day16 do
     |> checksum()
   end
 
-  def part1(_args) do
-    fill_disk(from_string("01111001100111011"), 272)
+  def fill_and_checksum(seed, disk_size) do
+    fill_disk(from_string(seed), disk_size)
     |> checksum()
     |> map(fn c -> c + ?0 end)
     |> to_string()
   end
 
-  def part2(_args) do
-    fill_disk(from_string("01111001100111011"), 35_651_584)
-    |> checksum()
-    |> map(fn c -> c + ?0 end)
-    |> to_string()
-  end
+  def part1(_args), do: fill_and_checksum("01111001100111011", 272)
+  def part2(_args), do: fill_and_checksum("01111001100111011", 35_651_584)
 end
