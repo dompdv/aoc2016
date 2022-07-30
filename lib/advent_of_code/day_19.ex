@@ -21,43 +21,49 @@ defmodule AdventOfCode.Day19 do
     play(:queue.len(starting_circle), starting_circle)
   end
 
-  def play2(_, 1, d), do: d
+  def init_circle(players) do
+    for i <- 0..(players - 1),
+        into: %{},
+        do: {i, %{before: rem(players + i - 1, players), after: rem(i + 1, players)}}
+  end
 
-  def play2(elf, l, d) do
-    # IO.inspect({elf, l, d})
-    if :rand.uniform() > 0.99, do: IO.inspect(l)
-
-    IO.inspect(l)
-
-    {_, ordered, current_elf_index} =
-      Enum.reduce(d, {0, %{}, nil}, fn {n_elf, _}, {index, acc, index_current_elf} ->
-        found =
-          case index_current_elf do
-            nil -> if n_elf == elf, do: index, else: nil
-            n -> n
-          end
-
-        {index + 1, Map.put(acc, index, n_elf), found}
+  def one_turn(current_elf_number, circle, l) do
+    opposite_elf_number =
+      Enum.reduce(1..div(l, 2), current_elf_number, fn _, e_number ->
+        circle[e_number][:after]
       end)
 
-    presents = :orddict.fetch(elf, d)
-    opposite_index = rem(current_elf_index + div(l, 2), l)
-    opposite_elf = ordered[opposite_index]
+    %{before: before_opposite_elf_number, after: after_opposite_elf_number} =
+      circle[opposite_elf_number]
 
-    next_elf = ordered[rem(current_elf_index + 1, l)]
+    before_opposite_elf = circle[before_opposite_elf_number]
+    after_opposite_elf = circle[after_opposite_elf_number]
 
-    next_elf =
-      if next_elf != opposite_elf, do: next_elf, else: ordered[rem(current_elf_index + 2, l)]
+    new_circle =
+      circle
+      |> Map.put(
+        before_opposite_elf_number,
+        %{before_opposite_elf | after: after_opposite_elf_number}
+      )
+      |> Map.put(
+        after_opposite_elf_number,
+        %{after_opposite_elf | before: before_opposite_elf_number}
+      )
+      |> Map.delete(opposite_elf_number)
 
-    presents_opposite = :orddict.fetch(opposite_elf, d)
-    d = :orddict.erase(opposite_elf, d)
-    d = :orddict.store(elf, presents + presents_opposite, d)
-    if l == 2, do: play2(nil, 1, d), else: play2(next_elf, l - 1, d)
+    {new_circle[current_elf_number][:after], new_circle, l - 1}
+  end
+
+  def play2(_elf, c, 1), do: (Map.keys(c) |> List.first()) + 1
+
+  def play2(elf, circle, l) do
+    if :rand.uniform() > 0, do: IO.inspect(l)
+    {elf, circle, l} = one_turn(elf, circle, l)
+    play2(elf, circle, l)
   end
 
   def part2(_args) do
-    starting_circle = :orddict.from_list(for i <- 1..3_012_210, do: {i, 1})
-
-    play2(1, :orddict.size(starting_circle), starting_circle)
+    starting = init_circle(3_012_210)
+    play2(0, starting, Enum.count(starting))
   end
 end
