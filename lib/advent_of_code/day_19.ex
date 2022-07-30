@@ -21,49 +21,22 @@ defmodule AdventOfCode.Day19 do
     play(:queue.len(starting_circle), starting_circle)
   end
 
-  def init_circle(players) do
-    for i <- 0..(players - 1),
-        into: %{},
-        do: {i, %{before: rem(players + i - 1, players), after: rem(i + 1, players)}}
-  end
+  def play2(<<c::24>>, 1), do: c
 
-  def one_turn(current_elf_number, circle, l) do
-    opposite_elf_number =
-      Enum.reduce(1..div(l, 2), current_elf_number, fn _, e_number ->
-        circle[e_number][:after]
-      end)
-
-    %{before: before_opposite_elf_number, after: after_opposite_elf_number} =
-      circle[opposite_elf_number]
-
-    before_opposite_elf = circle[before_opposite_elf_number]
-    after_opposite_elf = circle[after_opposite_elf_number]
-
-    new_circle =
-      circle
-      |> Map.put(
-        before_opposite_elf_number,
-        %{before_opposite_elf | after: after_opposite_elf_number}
-      )
-      |> Map.put(
-        after_opposite_elf_number,
-        %{after_opposite_elf | before: before_opposite_elf_number}
-      )
-      |> Map.delete(opposite_elf_number)
-
-    {new_circle[current_elf_number][:after], new_circle, l - 1}
-  end
-
-  def play2(_elf, c, 1), do: (Map.keys(c) |> List.first()) + 1
-
-  def play2(elf, circle, l) do
-    if :rand.uniform() > 0, do: IO.inspect(l)
-    {elf, circle, l} = one_turn(elf, circle, l)
-    play2(elf, circle, l)
+  def play2(circle, l) do
+    cut = div(l, 2)
+    if :rand.uniform() > 0.9999, do: IO.inspect({cut, l, :erlang.bit_size(circle) / 24})
+    low = :erlang.binary_part(circle, 0, 3 * cut)
+    high = :erlang.binary_part(circle, 3 * cut, 3 * l - 3 * cut)
+    <<elf::24, left::binary>> = low
+    <<_::24, r::binary>> = high
+    play2(left <> r <> <<elf::24>>, l - 1)
   end
 
   def part2(_args) do
-    starting = init_circle(3_012_210)
-    play2(0, starting, Enum.count(starting))
+    players = 3_012_210
+    # players = 5
+    starting = for(i <- 1..players, do: <<i::24>>) |> :binary.list_to_bin()
+    play2(starting, players)
   end
 end
