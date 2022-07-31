@@ -16,18 +16,18 @@ defmodule AdventOfCode.Day21 do
       Stream.drop_while(@patterns, fn {_, pattern} -> not Regex.match?(pattern, line) end)
       |> take(1)
 
-    [atom | Regex.run(pattern, line, capture: :all_but_first)]
-    |> map(fn
-      e when is_atom(e) ->
-        e
-
-      e ->
-        case Integer.parse(e) do
-          :error -> String.to_charlist(e) |> List.first()
-          {i, _} -> i
+    captures =
+      map(
+        Regex.run(pattern, line, capture: :all_but_first),
+        fn e ->
+          case Integer.parse(e) do
+            :error -> String.to_charlist(e) |> List.first()
+            {i, _} -> i
+          end
         end
-    end)
-    |> List.to_tuple()
+      )
+
+    List.to_tuple([atom | captures])
   end
 
   def parse(args), do: map(String.split(args, "\n", trim: true), &parse_line/1)
