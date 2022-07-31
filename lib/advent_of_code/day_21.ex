@@ -83,19 +83,30 @@ defmodule AdventOfCode.Day21 do
     scramble({:rotate_r, index + 1 + if(index >= 4, do: 1, else: 0)}, p)
   end
 
+  # Deduced by observation
+  @rotate_back %{1 => 1, 3 => 2, 5 => 3, 7 => 4, 2 => 6, 4 => 7, 6 => 0, 0 => 1}
+
+  def scramble({:rotate_back_by_letter, x}, p),
+    do: scramble({:rotate_l, @rotate_back[find_index(p, &(&1 == x))]}, p)
+
   def scramble([], password), do: password
 
-  def scramble([c | r], password) do
-    new_password = scramble(c, password)
-    IO.inspect({c, password, new_password}, label: "Avant Après")
-    scramble(r, new_password)
-  end
+  def scramble([c | r], password), do: scramble(r, scramble(c, password))
 
-  def part1(args) do
-    parse(args) |> scramble(String.to_charlist("abcdefgh"))
-  end
+  def opposite({:rotate_l, s}), do: {:rotate_r, s}
+  def opposite({:rotate_r, s}), do: {:rotate_l, s}
+  def opposite({:move, pos1, pos2}), do: {:move, pos2, pos1}
+  def opposite({:swap_n, pos1, pos2}), do: {:swap_n, pos1, pos2}
+  def opposite({:swap_l, c1, c2}), do: {:swap_l, c1, c2}
+  def opposite({:reverse, pos1, pos2}), do: {:reverse, pos1, pos2}
+  def opposite({:rotate_by_letter, c}), do: {:rotate_back_by_letter, c}
 
-  def part2(args) do
-    parse(args)
-  end
+  def reverse_instructions(p), do: map(p, &opposite/1) |> reverse()
+
+  def part1(args), do: parse(args) |> scramble(String.to_charlist("abcdefgh"))
+
+  def part2(args),
+    do:
+      reverse_instructions(parse(args))
+      |> scramble(String.to_charlist("fbgdceah"))
 end
