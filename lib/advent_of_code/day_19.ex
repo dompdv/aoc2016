@@ -25,7 +25,6 @@ defmodule AdventOfCode.Day19 do
 
   def play2(circle, l) do
     cut = div(l, 2)
-    if :rand.uniform() > 0.9999, do: IO.inspect({cut, l, :erlang.bit_size(circle) / 24})
     low = :erlang.binary_part(circle, 0, 3 * cut)
     high = :erlang.binary_part(circle, 3 * cut, 3 * l - 3 * cut)
     <<elf::24, left::binary>> = low
@@ -35,7 +34,6 @@ defmodule AdventOfCode.Day19 do
 
   def part2(_args) do
     players = 3_012_210
-    # players = 5
     starting = for(i <- 1..players, do: <<i::24>>) |> :binary.list_to_bin()
     play2(starting, players)
   end
