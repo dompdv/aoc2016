@@ -28,6 +28,9 @@ defmodule AdventOfCode.Day22 do
   end
 
   def part2(args) do
-    parse(args)
+    nodes = parse(args)
+    max_x = Enum.max(for {x, _} <- Map.keys(nodes), do: x)
+    max_y = Enum.max(for {_, y} <- Map.keys(nodes), do: y)
+    {max_x, max_y}
   end
 end
